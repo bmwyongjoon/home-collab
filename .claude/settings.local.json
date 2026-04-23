@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "PowerShell(npm *)",
+      "Read(//c/Users/zirru/.claude/projects/C--projects-home-collab/memory//**)",
+      "Read(//c/Users/zirru/.claude/projects/C--projects-home-collab/memory/**)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

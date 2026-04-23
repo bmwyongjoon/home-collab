@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 자신의 유저 문서만 읽기/쓰기
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+
+    // 패밀리: 멤버만 읽기, 생성은 인증된 사용자
+    match /families/{familyId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid in resource.data.members;
+
+      // 태스크: 패밀리 멤버만 CRUD
+      match /tasks/{taskId} {
+        allow read, write: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
+      }
+
+      // 완료 기록: 패밀리 멤버만 CRUD
+      match /completions/{completionId} {
+        allow read, write: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
+      }
+
+      // 카테고리: 패밀리 멤버만 CRUD
+      match /categories/{categoryId} {
+        allow read, write: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
+      }
+    }
+  }
+}
