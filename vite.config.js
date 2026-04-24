@@ -38,12 +38,12 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'firebase-messaging-sw.js'],
+        registerType: 'prompt',
+        includeAssets: ['favicon.png', 'firebase-messaging-sw.js'],
         manifest: {
-          name: '집안일 협업',
-          short_name: '홈콜라보',
-          description: '우리 가족 집안일 협업 앱',
+          name: '함께할 일',
+          short_name: '함께할 일',
+          description: '둘이 함께하는 집안일 협업 앱',
           theme_color: '#6366f1',
           background_color: '#f8fafc',
           display: 'standalone',

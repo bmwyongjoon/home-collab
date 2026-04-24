@@ -40,9 +40,19 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* 로고 */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🏠</div>
-          <h1 className="text-2xl font-bold text-slate-800">홈콜라보</h1>
-          <p className="text-slate-500 text-sm mt-1">우리 가족 집안일 협업 앱</p>
+          <div className="flex justify-center mb-3">
+            <svg width="72" height="72" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="96" cy="96" r="96" fill="#FF9A3C"/>
+              <polygon points="33,106 96,47 159,106" fill="white"/>
+              <rect x="52" y="99" width="88" height="64" rx="4" fill="white"/>
+              <rect x="74" y="130" width="30" height="33" rx="3" fill="#FF9A3C"/>
+              <polyline points="63,118 85,140 126,105"
+                stroke="#22C55E" strokeWidth="11" strokeLinecap="round"
+                strokeLinejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800">함께할 일</h1>
+          <p className="text-slate-500 text-sm mt-1">둘이 함께하는 집안일 협업 앱</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">

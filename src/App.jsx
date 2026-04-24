@@ -4,6 +4,7 @@ import { useTasksListener } from './hooks/useTasks';
 import { useNotifications } from './hooks/useNotifications';
 import { useAuthStore } from './store/authStore';
 import LoadingSpinner from './components/LoadingSpinner';
+import UpdatePrompt from './components/UpdatePrompt';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Calendar from './pages/Calendar';
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <HashRouter>
       <AppContent />
+      <UpdatePrompt />
     </HashRouter>
   );
 }

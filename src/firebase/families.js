@@ -12,6 +12,16 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 
+export async function createSoloFamily(uid, displayName) {
+  const ref = await addDoc(collection(db, 'families'), {
+    members: [uid],
+    memberNames: { [uid]: displayName },
+    createdAt: serverTimestamp(),
+  });
+  await updateDoc(doc(db, 'users', uid), { familyId: ref.id });
+  return ref.id;
+}
+
 export async function createFamily(uid1, displayName1, uid2, displayName2) {
   const ref = await addDoc(collection(db, 'families'), {
     members: [uid1, uid2],

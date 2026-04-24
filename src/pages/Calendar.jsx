@@ -1,6 +1,15 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, isToday } from 'date-fns';
+import { ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  startOfWeek,
+  endOfWeek,
+  isSameDay,
+  isToday,
+} from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Layout from '../components/Layout';
 import TaskCard from '../components/TaskCard';
@@ -11,24 +20,37 @@ import { isTaskDueOnDate, isOneTimeDueOnDate, getPeriodKey } from '../utils/recu
 import { formatMonthYear } from '../utils/dateHelpers';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+const YEARS = Array.from({ length: 11 }, (_, i) => 2020 + i);
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+function getBarStyle(task, currentUid) {
+  const isMe = task.assigneeId === currentUid;
+  const isTogether = task.assigneeId === 'together';
+  const isRoutine = task.type === 'routine';
+  if (isMe) return isRoutine ? 'bg-blue-200 text-blue-800' : 'bg-blue-500 text-white';
+  if (isTogether) return isRoutine ? 'bg-green-200 text-green-800' : 'bg-green-500 text-white';
+  return isRoutine ? 'bg-pink-200 text-pink-800' : 'bg-pink-500 text-white';
+}
 
 export default function Calendar() {
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(now.getFullYear());
   const [filters, setFilters] = useState({ me: true, partner: true, together: true, completed: true });
 
   const { currentUser } = useAuthStore();
   const { tasks, completions } = useTaskStore();
 
   function prevMonth() {
-    if (currentMonth === 0) { setCurrentYear(y => y - 1); setCurrentMonth(11); }
-    else setCurrentMonth(m => m - 1);
+    if (currentMonth === 0) { setCurrentYear((y) => y - 1); setCurrentMonth(11); }
+    else setCurrentMonth((m) => m - 1);
   }
   function nextMonth() {
-    if (currentMonth === 11) { setCurrentYear(y => y + 1); setCurrentMonth(0); }
-    else setCurrentMonth(m => m + 1);
+    if (currentMonth === 11) { setCurrentYear((y) => y + 1); setCurrentMonth(0); }
+    else setCurrentMonth((m) => m + 1);
   }
 
   const calendarDays = useMemo(() => {
@@ -51,7 +73,6 @@ export default function Calendar() {
       const periodKey = getPeriodKey(date);
       const done = completions.some((c) => c.taskId === task.id && c.periodKey === periodKey);
 
-      // 필터 체크
       const isMe = task.assigneeId === currentUser?.uid;
       const isTogether = task.assigneeId === 'together';
       const isPartner = !isMe && !isTogether;
@@ -66,8 +87,75 @@ export default function Calendar() {
 
   const selectedTasks = selectedDate ? getTasksForDay(selectedDate) : [];
 
+  const titleElement = (
+    <button
+      onClick={() => { setPickerYear(currentYear); setShowPicker(true); }}
+      className="flex items-center gap-1 text-lg font-bold text-slate-800 hover:text-primary-600 transition-colors"
+    >
+      {formatMonthYear(currentYear, currentMonth)}
+      <ChevronDown size={16} />
+    </button>
+  );
+
   return (
-    <Layout title={formatMonthYear(currentYear, currentMonth)}>
+    <Layout title={titleElement}>
+      {/* 연도/월 선택 팝업 */}
+      {showPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl p-5 w-72 shadow-xl mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-slate-800">연도 / 월 선택</h3>
+              <button
+                onClick={() => setShowPicker(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* 연도 선택 */}
+            <div className="grid grid-cols-4 gap-1.5 mb-4">
+              {YEARS.map((y) => (
+                <button
+                  key={y}
+                  onClick={() => setPickerYear(y)}
+                  className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    pickerYear === y
+                      ? 'bg-primary-600 text-white'
+                      : 'hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-px bg-slate-100 mb-4" />
+
+            {/* 월 선택 */}
+            <div className="grid grid-cols-4 gap-1.5">
+              {MONTHS.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setCurrentYear(pickerYear);
+                    setCurrentMonth(m - 1);
+                    setShowPicker(false);
+                  }}
+                  className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    pickerYear === currentYear && m - 1 === currentMonth
+                      ? 'bg-primary-600 text-white'
+                      : 'hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {m}월
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 월 네비게이션 */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-slate-100">
@@ -106,6 +194,21 @@ export default function Calendar() {
         ))}
       </div>
 
+      {/* 색상 범례 */}
+      <div className="flex gap-3 mb-3 flex-wrap">
+        {[
+          { label: '나 (일회성)', color: 'bg-blue-500' },
+          { label: '나 (루틴)', color: 'bg-blue-200' },
+          { label: '상대방 (일회성)', color: 'bg-pink-500' },
+          { label: '함께 (일회성)', color: 'bg-green-500' },
+        ].map(({ label, color }) => (
+          <div key={label} className="flex items-center gap-1">
+            <span className={`w-2.5 h-2.5 rounded-sm ${color}`} />
+            <span className="text-[10px] text-slate-400">{label}</span>
+          </div>
+        ))}
+      </div>
+
       {/* 요일 헤더 */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_LABELS.map((d, i) => (
@@ -131,13 +234,15 @@ export default function Calendar() {
           return (
             <button
               key={day.toISOString()}
-              onClick={() => isCurrentMonth && setSelectedDate(isSameDay(day, selectedDate) ? null : day)}
-              className={`bg-white p-1.5 min-h-[56px] flex flex-col items-center transition-colors ${
+              onClick={() =>
+                isCurrentMonth && setSelectedDate(isSameDay(day, selectedDate) ? null : day)
+              }
+              className={`bg-white p-1 min-h-[80px] flex flex-col transition-colors ${
                 !isCurrentMonth ? 'opacity-30 cursor-default' : 'hover:bg-primary-50'
               } ${isSelected ? 'bg-primary-50 ring-2 ring-inset ring-primary-300' : ''}`}
             >
               <span
-                className={`w-7 h-7 flex items-center justify-center text-sm rounded-full mb-1 ${
+                className={`w-6 h-6 flex items-center justify-center text-xs rounded-full mb-0.5 flex-shrink-0 ${
                   todayMark
                     ? 'bg-primary-600 text-white font-bold'
                     : day.getDay() === 0
@@ -149,21 +254,22 @@ export default function Calendar() {
               >
                 {day.getDate()}
               </span>
-              {/* 태스크 점 */}
-              <div className="flex flex-wrap justify-center gap-0.5 max-w-full">
-                {dayTasks.slice(0, 4).map((t, i) => {
-                  const isDone = completions.some(
-                    (c) => c.taskId === t.id && c.periodKey === getPeriodKey(day)
-                  );
-                  return (
-                    <span
-                      key={i}
-                      className={`w-1.5 h-1.5 rounded-full ${isDone ? 'bg-green-400' : 'bg-primary-400'}`}
-                    />
-                  );
-                })}
-                {dayTasks.length > 4 && (
-                  <span className="text-[9px] text-slate-400">+{dayTasks.length - 4}</span>
+              <div className="w-full space-y-0.5">
+                {dayTasks.slice(0, 2).map((t, i) => (
+                  <div
+                    key={i}
+                    className={`w-full truncate text-[9px] leading-[14px] px-0.5 rounded ${getBarStyle(
+                      t,
+                      currentUser?.uid
+                    )}`}
+                  >
+                    {t.title}
+                  </div>
+                ))}
+                {dayTasks.length > 2 && (
+                  <p className="text-[8px] text-slate-400 px-0.5 leading-3">
+                    +{dayTasks.length - 2}개 더
+                  </p>
                 )}
               </div>
             </button>

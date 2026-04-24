@@ -6,7 +6,7 @@ import { addCompletion, removeCompletion } from '../firebase/completions';
 import { deleteTask } from '../firebase/tasks';
 import { sendPushNotification } from '../firebase/notifications';
 import { getPeriodKey, RECURRENCE_LABELS } from '../utils/recurrence';
-import { formatDate, isOverdue, toDate } from '../utils/dateHelpers';
+import { formatDate, formatDateWithTime, isOverdue, toDate } from '../utils/dateHelpers';
 import CategoryBadge from './CategoryBadge';
 import AssigneeBadge from './AssigneeBadge';
 
@@ -100,7 +100,16 @@ export default function TaskCard({ task, date, showActions = true }) {
             )}
             {task.type === 'one-time' && task.dueDate && (
               <span className={`text-xs px-2 py-0.5 rounded-full ${overdue ? 'text-red-600 bg-red-100' : 'text-slate-400 bg-slate-100'}`}>
-                {overdue ? '⚠️ ' : ''}{formatDate(task.dueDate)}까지
+                {overdue ? '⚠️ ' : ''}
+                {task.dueTime
+                  ? formatDateWithTime(
+                      task.dueDate?.toDate
+                        ? task.dueDate.toDate().toISOString().slice(0, 10)
+                        : task.dueDate,
+                      task.dueTime
+                    )
+                  : formatDate(task.dueDate)}
+                까지
               </span>
             )}
           </div>

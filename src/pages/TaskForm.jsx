@@ -23,6 +23,8 @@ const defaultForm = {
     startDate: format(new Date(), 'yyyy-MM-dd'),
   },
   dueDate: '',
+  dueTime: '',
+  hasDueTime: false,
 };
 
 export default function TaskForm() {
@@ -41,6 +43,9 @@ export default function TaskForm() {
     if (!isEdit) return;
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
+    const dueDateStr = task.dueDate?.toDate
+      ? format(task.dueDate.toDate(), 'yyyy-MM-dd')
+      : task.dueDate || '';
     setForm({
       title: task.title || '',
       description: task.description || '',
@@ -57,9 +62,9 @@ export default function TaskForm() {
               : task.recurrence.startDate || format(new Date(), 'yyyy-MM-dd'),
           }
         : defaultForm.recurrence,
-      dueDate: task.dueDate?.toDate
-        ? format(task.dueDate.toDate(), 'yyyy-MM-dd')
-        : task.dueDate || '',
+      dueDate: dueDateStr,
+      dueTime: task.dueTime || '',
+      hasDueTime: !!task.dueTime,
     });
   }, [id, tasks]);
 
@@ -97,8 +102,11 @@ export default function TaskForm() {
 
       if (form.type === 'routine') {
         payload.recurrence = { ...form.recurrence };
+        payload.dueDate = null;
+        payload.dueTime = null;
       } else {
         payload.dueDate = form.dueDate || null;
+        payload.dueTime = (form.hasDueTime && form.dueTime) ? form.dueTime : null;
         payload.recurrence = null;
       }
 
@@ -261,16 +269,40 @@ export default function TaskForm() {
           </div>
         )}
 
-        {/* 일회성: 마감일 */}
+        {/* 일회성: 마감일 + 시간 */}
         {form.type === 'one-time' && (
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">마감일 (선택)</label>
-            <input
-              type="date"
-              value={form.dueDate}
-              onChange={(e) => setField('dueDate', e.target.value)}
-              className="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400"
-            />
+          <div className="space-y-3 bg-white rounded-2xl p-4 border border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-700">마감일 설정</h3>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1.5">날짜 (선택)</label>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setField('dueDate', e.target.value)}
+                className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400"
+              />
+            </div>
+            {form.dueDate && (
+              <div>
+                <label className="flex items-center gap-2 text-xs text-slate-500 mb-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.hasDueTime}
+                    onChange={(e) => setField('hasDueTime', e.target.checked)}
+                    className="w-4 h-4 rounded accent-primary-600"
+                  />
+                  시간 설정
+                </label>
+                {form.hasDueTime && (
+                  <input
+                    type="time"
+                    value={form.dueTime}
+                    onChange={(e) => setField('dueTime', e.target.value)}
+                    className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400"
+                  />
+                )}
+              </div>
+            )}
           </div>
         )}
 

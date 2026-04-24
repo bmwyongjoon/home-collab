@@ -5,34 +5,53 @@ import Layout from '../components/Layout';
 import TaskCard from '../components/TaskCard';
 import { useAuthStore } from '../store/authStore';
 import { useTaskStore } from '../store/taskStore';
+import { toDate } from '../utils/dateHelpers';
 
 export default function TaskList() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState('routine'); // 'routine' | 'one-time'
+  const [tab, setTab] = useState('one-time'); // 일회성 탭이 첫 번째
   const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const { currentUser } = useAuthStore();
   const { tasks, categories } = useTaskStore();
 
+  const today = new Date();
+
   const filtered = useMemo(() => {
-    return tasks.filter((t) => {
+    const list = tasks.filter((t) => {
       if (t.type !== tab) return false;
       if (!t.isActive) return false;
 
       if (assigneeFilter !== 'all') {
         if (assigneeFilter === 'me' && t.assigneeId !== currentUser?.uid) return false;
         if (assigneeFilter === 'together' && t.assigneeId !== 'together') return false;
-        if (assigneeFilter === 'partner' && (t.assigneeId === currentUser?.uid || t.assigneeId === 'together')) return false;
+        if (
+          assigneeFilter === 'partner' &&
+          (t.assigneeId === currentUser?.uid || t.assigneeId === 'together')
+        )
+          return false;
       }
 
       if (categoryFilter !== 'all' && t.categoryId !== categoryFilter) return false;
 
       return true;
     });
-  }, [tasks, tab, assigneeFilter, categoryFilter, currentUser?.uid]);
 
-  const today = new Date();
+    // 일회성은 마감일 오름차순 정렬
+    if (tab === 'one-time') {
+      list.sort((a, b) => {
+        const da = toDate(a.dueDate);
+        const db = toDate(b.dueDate);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da - db;
+      });
+    }
+
+    return list;
+  }, [tasks, tab, assigneeFilter, categoryFilter, currentUser?.uid]);
 
   return (
     <Layout
@@ -46,11 +65,11 @@ export default function TaskList() {
         </button>
       }
     >
-      {/* 탭 */}
+      {/* 탭: 일회성 먼저 */}
       <div className="flex bg-slate-100 rounded-xl p-1 mb-4">
         {[
-          { key: 'routine', label: '루틴' },
           { key: 'one-time', label: '일회성' },
+          { key: 'routine', label: '루틴' },
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -69,7 +88,6 @@ export default function TaskList() {
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <Filter size={14} className="text-slate-400" />
         </div>
-        {/* 담당자 */}
         {[
           { key: 'all', label: '전체' },
           { key: 'me', label: '나' },
@@ -89,7 +107,6 @@ export default function TaskList() {
           </button>
         ))}
         <div className="w-px bg-slate-200 flex-shrink-0" />
-        {/* 카테고리 */}
         <button
           onClick={() => setCategoryFilter('all')}
           className={`px-3 py-1 rounded-full text-xs font-medium border flex-shrink-0 transition-colors ${
