@@ -1,33 +1,33 @@
-// Firebase Messaging Service Worker (백그라운드 푸시 수신)
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+// Firebase Messaging Service Worker — 백그라운드 푸시 수신
+// self.registration.scope 사용 → Netlify('/')와 GitHub Pages('/home-collab/')에서 모두 동작
 
-// 이 파일은 빌드 시 자동으로 Firebase 설정이 주입되지 않으므로
-// 아래 설정을 직접 입력해야 합니다
-firebase.initializeApp({
-  apiKey: "AIzaSyAYr-SX1BaUG_PWF31H1uvTspY-rq5arGg",
-  authDomain: "home-collab.firebaseapp.com",
-  projectId: "home-collab",
-  storageBucket: "home-collab.firebasestorage.app",
-  messagingSenderId: "803047926601",
-  appId: "1:803047926601:web:b84b6334215b55f9cac898",
-});
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
 
-const messaging = firebase.messaging();
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch {
+    return;
+  }
 
-messaging.onBackgroundMessage((payload) => {
-  const { title, body, icon } = payload.notification || {};
-  self.registration.showNotification(title || '홈콜라보', {
-    body: body || '',
-    icon: icon || '/home-collab/icons/icon-192.png',
-    badge: '/home-collab/icons/icon-192.png',
-    data: payload.data,
-  });
+  const notification = payload.notification || {};
+  const title = notification.title || '함께할 일';
+  const body = notification.body || '';
+  const scope = self.registration.scope;
+  const icon = notification.icon || scope + 'icons/icon-192.png';
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: scope + 'icons/icon-192.png',
+      data: payload.data || {},
+    })
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/home-collab/')
-  );
+  event.waitUntil(clients.openWindow(self.registration.scope));
 });
