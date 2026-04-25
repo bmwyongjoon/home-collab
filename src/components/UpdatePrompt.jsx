@@ -4,10 +4,31 @@ import { RefreshCw } from 'lucide-react';
 export default function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
   } = useRegisterSW();
 
   if (!needRefresh) return null;
+
+  async function handleUpdate() {
+    setNeedRefresh(false);
+    try {
+      // 대기 중인 서비스 워커에 직접 SKIP_WAITING 메시지 전송
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg?.waiting) {
+        // 새 SW가 컨트롤을 넘겨받으면 즉시 리로드
+        navigator.serviceWorker.addEventListener(
+          'controllerchange',
+          () => window.location.reload(),
+          { once: true }
+        );
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        return;
+      }
+    } catch {
+      // fallthrough
+    }
+    // 대기 SW가 없으면 바로 리로드
+    window.location.reload();
+  }
 
   return (
     <div className="fixed bottom-24 left-4 right-4 z-50 animate-in">
@@ -24,7 +45,7 @@ export default function UpdatePrompt() {
 
         <div className="flex gap-2 mt-4">
           <button
-            onClick={() => updateServiceWorker(true)}
+            onClick={handleUpdate}
             className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 active:scale-[0.98] transition-all"
           >
             지금 업데이트
