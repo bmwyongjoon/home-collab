@@ -4,7 +4,7 @@ import { Bell, BellOff, LogOut, UserPlus, Trash2, Plus, ChevronRight, History } 
 import Layout from '../components/Layout';
 import Modal from '../components/Modal';
 import { logout, updateUserProfile, getUserProfile } from '../firebase/auth';
-import { createFamily } from '../firebase/families';
+import { getFamily, connectPartner } from '../firebase/families';
 import { addCategory, updateCategory, deleteCategory } from '../firebase/categories';
 import { useAuthStore } from '../store/authStore';
 import { useTaskStore } from '../store/taskStore';
@@ -55,16 +55,21 @@ export default function Settings() {
         setPairError('자신의 이메일은 입력할 수 없어요.');
         return;
       }
-      if (partnerData.familyId) {
-        setPairError('상대방이 이미 다른 가족과 연결되어 있어요.');
+      // 이미 같은 family면 이미 연결됨
+      if (partnerData.familyId === familyId) {
+        setPairSuccess(`${partnerData.displayName}님과 이미 연결되어 있어요!`);
         return;
       }
-      await createFamily(
-        currentUser.uid,
-        userProfile?.displayName || '',
-        partnerDoc.id,
-        partnerData.displayName || ''
-      );
+      // 파트너가 다른 사람과 이미 연결된 경우(family 멤버 2명 이상)만 차단
+      if (partnerData.familyId) {
+        const partnerFamily = await getFamily(partnerData.familyId);
+        if (partnerFamily && partnerFamily.members.length > 1) {
+          setPairError('상대방이 이미 다른 파트너와 연결되어 있어요.');
+          return;
+        }
+      }
+      // 파트너를 현재 유저의 family에 합류
+      await connectPartner(familyId, partnerDoc.id, partnerData.displayName || '');
       setPairSuccess(`${partnerData.displayName}님과 연결됐어요! 🎉`);
       setPartnerEmail('');
       setTimeout(() => setShowPairModal(false), 1500);
@@ -135,7 +140,7 @@ export default function Settings() {
         </section>
 
         {/* 파트너 연결 */}
-        {!familyId && (
+        {!partnerProfile && (
           <section className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
             <p className="text-sm font-medium text-amber-800 mb-2">⚠️ 파트너와 아직 연결되지 않았어요</p>
             <p className="text-xs text-amber-600 mb-3">파트너가 먼저 앱에 가입한 후, 이메일로 연결하세요.</p>
