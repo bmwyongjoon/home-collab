@@ -25,7 +25,7 @@ export function useNotifications() {
         if (Notification.permission === 'granted') {
           new Notification(payload.notification?.title || '홈콜라보', {
             body: payload.notification?.body || '',
-            icon: '/home-collab/icons/icon-192.png',
+            icon: import.meta.env.BASE_URL + 'icons/icon-192.png',
           });
         }
       });

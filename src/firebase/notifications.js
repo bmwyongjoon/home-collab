@@ -25,10 +25,11 @@ export async function requestNotificationPermission(vapidKey) {
   try {
     let serviceWorkerRegistration;
     if ('serviceWorker' in navigator) {
-      // firebase-messaging-sw.js를 명시적으로 등록해 FCM이 올바른 SW를 사용하도록 함
+      // import.meta.env.BASE_URL 사용 → Netlify('/')와 GitHub Pages('/home-collab/')에서 모두 동작
+      const base = import.meta.env.BASE_URL;
       serviceWorkerRegistration = await navigator.serviceWorker.register(
-        '/home-collab/firebase-messaging-sw.js',
-        { scope: '/home-collab/' }
+        base + 'firebase-messaging-sw.js',
+        { scope: base }
       );
       await navigator.serviceWorker.ready;
       console.log('[FCM] 서비스 워커 등록 완료:', serviceWorkerRegistration.scope);

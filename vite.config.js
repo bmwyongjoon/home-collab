@@ -2,8 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Netlify 환경에서는 루트 경로, GitHub Pages는 서브 경로 사용
+const base = process.env.NETLIFY ? '/' : '/home-collab/'
+
 export default defineConfig({
-  base: '/home-collab/',
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +20,8 @@ export default defineConfig({
         background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/home-collab/',
-        start_url: '/home-collab/',
+        scope: base,
+        start_url: base,
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },

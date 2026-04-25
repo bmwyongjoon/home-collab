@@ -1,5 +1,5 @@
 // Firebase Messaging Service Worker — 백그라운드 푸시 수신
-// Firebase SDK 없이 표준 Web Push API로 처리 (빌드 시 secrets 주입 불필요)
+// self.registration.scope 사용 → Netlify('/')와 GitHub Pages('/home-collab/')에서 모두 동작
 
 self.addEventListener('push', (event) => {
   if (!event.data) return;
@@ -14,13 +14,14 @@ self.addEventListener('push', (event) => {
   const notification = payload.notification || {};
   const title = notification.title || '함께할 일';
   const body = notification.body || '';
-  const icon = notification.icon || '/home-collab/icons/icon-192.png';
+  const scope = self.registration.scope;
+  const icon = notification.icon || scope + 'icons/icon-192.png';
 
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
       icon,
-      badge: '/home-collab/icons/icon-192.png',
+      badge: scope + 'icons/icon-192.png',
       data: payload.data || {},
     })
   );
@@ -28,5 +29,5 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('/home-collab/'));
+  event.waitUntil(clients.openWindow(self.registration.scope));
 });
