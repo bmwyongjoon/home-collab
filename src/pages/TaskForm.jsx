@@ -114,10 +114,14 @@ export default function TaskForm() {
         await updateTask(familyId, id, payload);
       } else {
         await createTask(familyId, payload);
-        // 파트너 알림
-        if (partnerProfile?.notificationsEnabled && partnerProfile?.fcmTokens?.length > 0) {
+        // 두 사람 모두에게 알림 전송
+        const allTokens = [
+          ...(userProfile?.fcmTokens || []),
+          ...(partnerProfile?.fcmTokens || []),
+        ];
+        if (allTokens.length > 0) {
           sendPushNotification({
-            tokens: partnerProfile.fcmTokens,
+            tokens: allTokens,
             title: '📋 새 태스크가 추가됐어요!',
             body: `"${payload.title}" 태스크가 추가됐습니다.`,
           });

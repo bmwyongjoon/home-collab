@@ -42,10 +42,11 @@ export default function Home() {
 
   const completedTodo = useMemo(
     () =>
+      // 일회성 태스크는 periodKey 무관하게 완료 기록 있으면 완료
       todayOnetime.filter((t) =>
-        completions.some((c) => c.taskId === t.id && c.periodKey === periodKey)
+        completions.some((c) => c.taskId === t.id)
       ).length,
-    [todayOnetime, completions, periodKey]
+    [todayOnetime, completions]
   );
 
   const completedRoutineCount = useMemo(
@@ -67,8 +68,8 @@ export default function Home() {
         if (!due) return false;
         const dueNorm = new Date(due.getFullYear(), due.getMonth(), due.getDate());
         if (dueNorm < todayNorm) return false;
-        const dk = getPeriodKey(due);
-        return !completions.some((c) => c.taskId === t.id && c.periodKey === dk);
+        // 일회성 태스크는 periodKey 무관하게 완료 기록 있으면 목록에서 제외
+        return !completions.some((c) => c.taskId === t.id);
       })
       .sort((a, b) => toDate(a.dueDate) - toDate(b.dueDate));
 
@@ -89,9 +90,11 @@ export default function Home() {
   // 오늘 완료한 태스크 목록
   const completedList = useMemo(
     () => [
+      // 일회성: periodKey 무관하게 완료 기록 있으면 완료
       ...todayOnetime.filter((t) =>
-        completions.some((c) => c.taskId === t.id && c.periodKey === periodKey)
+        completions.some((c) => c.taskId === t.id)
       ),
+      // 루틴: 오늘 날짜 periodKey로만 완료 판정
       ...todayRoutine.filter((t) =>
         completions.some((c) => c.taskId === t.id && c.periodKey === periodKey)
       ),

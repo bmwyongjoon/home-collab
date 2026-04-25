@@ -15,7 +15,8 @@ export default function TaskCard({ task, date, showActions = true }) {
   const { currentUser, userProfile, partnerProfile, familyId } = useAuthStore();
   const { isCompleted, getCompletionForPeriod, getCategoryById } = useTaskStore();
 
-  const periodKey = getPeriodKey(date || new Date());
+  // 일회성 태스크는 'permanent' 키 사용 → 날짜가 바뀌어도 완료 상태 유지
+  const periodKey = task.type === 'one-time' ? 'permanent' : getPeriodKey(date || new Date());
   const completed = isCompleted(task.id, periodKey);
   const completion = getCompletionForPeriod(task.id, periodKey);
   const category = getCategoryById(task.categoryId);
@@ -44,11 +45,15 @@ export default function TaskCard({ task, date, showActions = true }) {
       isAssist: task.assigneeId !== currentUser.uid && task.assigneeId !== 'together',
     });
 
-    // 파트너 알림
-    if (partnerProfile?.notificationsEnabled && partnerProfile?.fcmTokens?.length > 0) {
-      const actor = userProfile?.displayName || '상대방';
+    // 두 사람 모두에게 알림 전송
+    const allTokens = [
+      ...(userProfile?.fcmTokens || []),
+      ...(partnerProfile?.fcmTokens || []),
+    ];
+    if (allTokens.length > 0) {
+      const actor = userProfile?.displayName || '누군가';
       sendPushNotification({
-        tokens: partnerProfile.fcmTokens,
+        tokens: allTokens,
         title: '✅ 태스크 완료!',
         body: `${actor}님이 "${task.title}"을(를) 완료했어요.`,
         data: { taskId: task.id },
