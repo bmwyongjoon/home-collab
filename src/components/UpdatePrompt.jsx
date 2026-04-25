@@ -8,25 +8,9 @@ export default function UpdatePrompt() {
 
   if (!needRefresh) return null;
 
-  async function handleUpdate() {
+  // autoUpdate 모드: 새 SW가 이미 자동 활성화됨 → 페이지 리로드만 하면 됨
+  function handleUpdate() {
     setNeedRefresh(false);
-    try {
-      // 대기 중인 서비스 워커에 직접 SKIP_WAITING 메시지 전송
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg?.waiting) {
-        // 새 SW가 컨트롤을 넘겨받으면 즉시 리로드
-        navigator.serviceWorker.addEventListener(
-          'controllerchange',
-          () => window.location.reload(),
-          { once: true }
-        );
-        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        return;
-      }
-    } catch {
-      // fallthrough
-    }
-    // 대기 SW가 없으면 바로 리로드
     window.location.reload();
   }
 
