@@ -7,6 +7,7 @@ export const useAuthStore = create((set) => ({
   familyId: null,
   familyData: null,
   isLoading: true,
+  loadError: null,
 
   setCurrentUser: (user) => set({ currentUser: user }),
   setUserProfile: (profile) => set({ userProfile: profile }),
@@ -14,6 +15,7 @@ export const useAuthStore = create((set) => ({
   setFamilyId: (id) => set({ familyId: id }),
   setFamilyData: (data) => set({ familyData: data }),
   setLoading: (loading) => set({ isLoading: loading }),
+  setLoadError: (error) => set({ loadError: error, isLoading: false }),
 
   reset: () =>
     set({
@@ -23,5 +25,6 @@ export const useAuthStore = create((set) => ({
       familyId: null,
       familyData: null,
       isLoading: false,
+      loadError: null,
     }),
 }));

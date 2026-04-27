@@ -6,8 +6,10 @@ import { getUserProfile } from '../firebase/auth';
 import { createSoloFamily } from '../firebase/families';
 import { useAuthStore } from '../store/authStore';
 
+const FIREBASE_TIMEOUT_MS = 10000;
+
 export function useAuthListener() {
-  const { setCurrentUser, setUserProfile, setPartnerProfile, setFamilyId, setFamilyData, setLoading, reset } =
+  const { setCurrentUser, setUserProfile, setPartnerProfile, setFamilyId, setFamilyData, setLoading, setLoadError, reset } =
     useAuthStore();
 
   const unsubUserRef = useRef(null);
@@ -15,7 +17,14 @@ export function useAuthListener() {
   const creatingFamilyRef = useRef(false);
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (useAuthStore.getState().isLoading) {
+        setLoadError('서버에 연결할 수 없습니다.\n인터넷 연결을 확인하고 새로고침 해주세요.');
+      }
+    }, FIREBASE_TIMEOUT_MS);
+
     const unsubAuth = onAuthStateChanged(auth, (user) => {
+      clearTimeout(timeoutId);
       unsubFamilyRef.current?.();
       unsubUserRef.current?.();
       creatingFamilyRef.current = false;
@@ -68,6 +77,7 @@ export function useAuthListener() {
     });
 
     return () => {
+      clearTimeout(timeoutId);
       unsubAuth();
       unsubFamilyRef.current?.();
       unsubUserRef.current?.();

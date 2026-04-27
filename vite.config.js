@@ -7,6 +7,21 @@ const base = process.env.NETLIFY ? '/' : '/home-collab/'
 
 export default defineConfig({
   base,
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('firebase/firestore') || id.includes('@firebase/firestore')) return 'vendor-firestore';
+          if (id.includes('firebase/messaging') || id.includes('@firebase/messaging')) return 'vendor-messaging';
+          if (id.includes('firebase') || id.includes('@firebase')) return 'vendor-firebase';
+          if (id.includes('react-router')) return 'vendor-router';
+          if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+          return 'vendor';
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
