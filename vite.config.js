@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Netlify 환경에서는 루트 경로, GitHub Pages는 서브 경로 사용
-const base = process.env.NETLIFY ? '/' : '/home-collab/'
+// Firebase Hosting / Netlify 모두 루트 경로 사용
+const base = '/'
 
 export default defineConfig({
   base,

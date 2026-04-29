@@ -48,12 +48,7 @@ export async function updateUserProfile(uid, updates) {
 
 export async function saveFcmToken(uid, token) {
   const userRef = doc(db, 'users', uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) return;
-  const { fcmTokens = [] } = snap.data();
-  if (!fcmTokens.includes(token)) {
-    await updateDoc(userRef, { fcmTokens: [...fcmTokens, token] });
-  }
+  await updateDoc(userRef, { fcmTokens: [token] });
 }
 
 export async function removeFcmToken(uid, token) {
